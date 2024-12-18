@@ -26,11 +26,11 @@
 - [ ]  重构出可读取命令行参数版
 
 ## 本程序使用了以下开源库：
-[bilibili-api](https://github.com/Nemo2011/bilibili-api):用 Python 写的调用 Bilibili 各种 API 的库
-[ffmpeg-python](https://github.com/kkroening/ffmpeg-python):为Python调用ffmpeg提供封装的库
-[pyyaml](https://github.com/yaml/pyyaml):解析Yaml
-[tqdm](https://github.com/tqdm/tqdm):Python下实现命令行进度条
-[httpx](https://github.com/encode/httpx):A next generation HTTP client for Python
+- [bilibili-api](https://github.com/Nemo2011/bilibili-api):用 Python 写的调用 Bilibili 各种 API 的库
+- [ffmpeg-python](https://github.com/kkroening/ffmpeg-python):为Python调用ffmpeg提供封装的库
+- [pyyaml](https://github.com/yaml/pyyaml):解析Yaml
+- [tqdm](https://github.com/tqdm/tqdm):Python下实现命令行进度条
+- [httpx](https://github.com/encode/httpx):A next generation HTTP client for Python
 ## 上手使用
 ### 简要步骤
 1. 确保你的电脑已经安装好Python环境，然后使用Pip命令安装以下依赖：
@@ -61,5 +61,5 @@ python main.py
 
 ## 最后
 
-这是我的<font color='#FF0000'>第一个<font color = '000000'>github项目,如果喜欢,请多多star
-遇到了令人不爽😡的BUG🐜或有更棒的想法？发issue告诉我，也许就会出现在TODO中
+- 这是我的<font color='#FF0000'>第一个<font color = '000000'>github项目,如果喜欢,请多多star
+- 遇到了令人不爽😡的BUG🐜或有更棒的想法？发issue告诉我，也许就会出现在TODO中
