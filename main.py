@@ -10,8 +10,7 @@ import os
 from tqdm import tqdm
 def inputInList(prompt,list):
     '''
-        获取输入并检测其是否在给定元素列表里
-        忽略大小写
+        获取输入并检测其是否在给定元素列表里且忽略大小写
     '''
     while True:
         str = input(prompt)
@@ -324,12 +323,9 @@ async def downloadFromUrl(url: str, out: str, info: str):
         length = resp.headers.get('content-length')
         with open(out, 'wb') as f:
             pbar = tqdm(total=int(length),desc=info+'进度')
-            #process = 0
             for chunk in resp.iter_bytes(1024):
                 if not chunk:
                     break
-                #process += len(chunk)
-                #print(f'下载 {info} {process} / {length}')
                 pbar.update(len(chunk))
                 f.write(chunk)
             pbar.close()
@@ -366,7 +362,7 @@ def selectStreams(detecter,downloadConfig):
         streamsListSize = len(streamsList)
         print("请选择你要下载的流")
         if (detecter.check_flv_stream()):
-            print('Flv流，无需选择')
+            print('Flv流,无需选择')
             videoUrl = streamsList[0].url
         else:
             for i in range(streamsListSize):
@@ -428,7 +424,6 @@ async def downloadAndSave(videoId,allconfig):
     downloadUrlData = await downloadVideo.get_download_url(0)
     #解析视频下载信息
     Detecter = video.VideoDownloadURLDataDetecter(data=downloadUrlData)
-    #TODO:改为可变路径
     tempFlvPath = os.path.join(allconfig['global_config']['tempPath'],"flv_temp.flv")
     tempVideoPath = os.path.join(allconfig['global_config']['tempPath'],"video_temp.m4s")
     tempAudioPath = os.path.join(allconfig['global_config']['tempPath'],"audio_temp.m4s")
@@ -437,7 +432,7 @@ async def downloadAndSave(videoId,allconfig):
     videoUrl,audioUrl = selectStreams(Detecter,allconfig['download_config'])
     if Detecter.check_flv_stream():
         # 下载FLV
-        await downloadFromUrl(videoUrl, tempFlvPath, "FLV 音视频流")
+        await downloadFromUrl(videoUrl, tempFlvPath, "FLV音视频流")
         mixStreams(videoPath=tempVideoPath,audioPath='',finalPath=finalFileName)
     else:
         #下载MP4流
