@@ -52,9 +52,7 @@ def inputDirectory(prompt):
     # 否则，解析用户输入的路径
     dirPath = os.path.abspath(os.path.expanduser(userInput))
     # 如果路径不存在，则创建它
-    if not os.path.exists(dirPath):
-        os.makedirs(dirPath)
-        print(f"目录 '{dirPath}' 已创建。")
+    checkOrCreateDirectory(dirPath)
     return dirPath
 def initGlobalConfig():
     '''
@@ -260,11 +258,18 @@ def extractAvidBvid(url_or_code:str):
     '''
     avid_pattern = re.compile(r'[aA][vV](\d+)')
     bvid_pattern = re.compile(r'[bB][vV][\d\w]+')
+    number_pattern = re.compile(r'^\d+$')
     avid_match = avid_pattern.search(url_or_code)
     bvid_match = bvid_pattern.search(url_or_code)
+    number_match = number_pattern.search(url_or_code)
     avid = avid_match.group(1) if avid_match else None
     bvid = bvid_match.group(0) if bvid_match else None
-    bvid = normalizeBvid(bvid=bvid)
+    number = number_match.group(0) if number_match else None
+    if avid == None and bvid == None:
+        if number_match :
+            avid = number
+    if bvid != None:
+        bvid = normalizeBvid(bvid=bvid)
     return avid, bvid
 def isInputVaild(inputString:str):
     '''
