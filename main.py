@@ -495,7 +495,7 @@ async def downloadAndSave(videoId,allconfig):
     print(f'{finalFileName}下载完成了！')
 async def main():
     allconfig = await loadAllConfig()
-    videoId = isInputVaild(input("请输入下载地址，AV号或BV号"))
+    videoId = isInputVaild(input("请输入下载地址，AV号或BV号,bv号请不要只输入bvh后的部分"))
     await downloadAndSave(videoId,allconfig)
 if __name__ == '__main__':
     # 主入口

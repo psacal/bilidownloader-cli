@@ -23,5 +23,5 @@
 5. 改进解析av号与bv号函数
     - 成因:未能考虑到只输入纯数字作为av号的用户
     - 修复方式:在extractAvidBvid()加入正则表达式判断
-    - 附言:顺便修复了在bvid=None的情况下仍然调用normalizeBvid()而导致错误的bug,这个小bug属于Bugid=2的bug的遗留
+    - 附言:顺便修复了在bvid=None的情况下仍然调用normalizeBvid()而导致错误的bug,这个小bug属于Bugid=2的bug的遗留。另外由于不能确定bv号去掉前导的两个字母后是否又正好以av,Av,aV,AV开头，故在输入时做了提示
     - 反馈者：[No.22](https://github.com/No-22-Github)
