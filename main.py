@@ -20,10 +20,28 @@ def inputInList(prompt,list):
         else:
             print('输入有误！请重新输入')
     return str
+def checkOrCreateDirectory(path):
+    """
+    检查路径是否存在，如果不存在则创建该路径。
+ 
+    参数:
+    path (str): 要检查或创建的路径。
+ 
+    """
+    if not os.path.exists(path):
+        try:
+            # 路径成功创建
+            os.makedirs(path)
+        except OSError as e:
+            # 如果创建目录时发生错误（例如权限不足）
+            print(f"创建目录 {path} 失败: {e}")
 def inputDirectory(prompt):
     """
     获取用户输入的目录路径，如果不存在则创建。
     如果输入的是'.'或者空字符串则使用程序所在目录
+
+    参数：
+    prompt:提示词
     """
     currentDir = os.path.dirname(os.path.abspath(__file__))
     userInput = input(prompt).strip()
@@ -176,10 +194,10 @@ async def userLogin():
             try:
                 credential.raise_for_no_bili_jct() # 判断是否成功
                 credential.raise_for_no_sessdata() # 判断是否成功
-            except:
+            except exceptions.LoginError:
                 print("二维码登陆失败")
                 credential = None
-                print('通过终端二维码登录成功')
+            print('通过终端二维码登录成功')
         else:
                 print('请选择登录方式 (1/2/3)')
                 print('1.账号密码(需要打开浏览器进行人机验证)')
@@ -221,28 +239,46 @@ async def loadAllConfig():
     allConfig['download_config'] = tempDownloadConfig
     allConfig['global_config'] = tempGlobalconfig
     return allConfig
-def extractAvidBvid(url_or_code):
+def normalizeBvid(bvid:str):
+    """
+    将用户输入的 bv 号以 Bv, bV 或 bv 开头的情况统一改为以 BV 开头，
+    同时保持后面的字符串大小写不变。
+
+    返回:
+    str: 规范化后的 bv 号。
+    """
+    # 检查输入字符串是否以 Bv, bV 或 bv 开头（不改变大小写）
+    if bvid.startswith(('Bv', 'bV', 'bv')):
+        # 将前缀统一改为 BV，并连接上后面的字符串
+        return 'BV' + bvid[2:]
+    else:
+        # 如果输入不符合条件，直接返回原字符串
+        return bvid
+def extractAvidBvid(url_or_code:str):
     '''
         从输入中分离avid,bvid并转为bvid
     '''
-    avid_pattern = re.compile(r'av(\d+)')
-    bvid_pattern = re.compile(r'BV[\d\w]+')
+    avid_pattern = re.compile(r'[aA][vV](\d+)')
+    bvid_pattern = re.compile(r'[bB][vV][\d\w]+')
     avid_match = avid_pattern.search(url_or_code)
     bvid_match = bvid_pattern.search(url_or_code)
     avid = avid_match.group(1) if avid_match else None
     bvid = bvid_match.group(0) if bvid_match else None
+    bvid = normalizeBvid(bvid=bvid)
     return avid, bvid
-def isInputVaild(inputString):
+def isInputVaild(inputString:str):
     '''
         判断输入是否合法并返回bvid
+
+        返回：str
     '''
     avid, bvid = extractAvidBvid(inputString)
     if avid and bvid:
         # 如果同时存在AV号和BV号，则报错
-        print("请勿同时输入Av号与Bv号")
+        print("请勿同时输入AV号与BV号")
     elif avid:
-        # 为AV号则转为BV号
-        bvid = bilibili_api.aid2bvid(avid)
+        # 为AV号则转为BV号 注意此处aid2bvid传入int返回str
+        bvid = bilibili_api.aid2bvid(int(avid))
         return bvid
     elif bvid:
         # 如果不存在AV号但存在BV号，则直接返回BV号
@@ -329,20 +365,30 @@ async def downloadFromUrl(url: str, out: str, info: str):
                 pbar.update(len(chunk))
                 f.write(chunk)
             pbar.close()
-def mixStreams(videoPath,audioPath='',finalPath='default.mp4'):
+def mixStreams(videoPath,audioPath='',finalPath='default.mp4',name=''):
     '''
         混流
+
+        参数：
+        videoPath:临时视频流路径(含文件名)
+        audioPath:临时音频流路径(含文件名)
+        finalPath:混流文件存放路径
+        name:混流文件名
     '''
+    checkOrCreateDirectory(finalPath)#检测下载路径是否存在
+    finalFilePath = os.path.join(finalPath,name)#完整路径+下载文件名
     if (audioPath != ''):
+        #视频，音频流都存在，即mp4
         audioStream = ffmpeg.input(audioPath)
         videoStream = ffmpeg.input(videoPath)
-        outputStream = ffmpeg.output(audioStream, videoStream, finalPath, acodec='copy', vcodec='copy',loglevel = 1)
+        outputStream = ffmpeg.output(audioStream, videoStream, finalFilePath, acodec='copy', vcodec='copy',loglevel = 1)
         ffmpeg.run(outputStream)
         os.remove(videoPath)
         os.remove(audioPath)
     else:
+        #音频视频流，即flv
         inputStream = ffmpeg.input(videoPath)
-        outputStream = ffmpeg.output(inputStream,finalPath,vcodec='libx264')
+        outputStream = ffmpeg.output(inputStream,finalFilePath,vcodec='libx264')
         ffmpeg.run(outputStream)
         os.remove(finalPath)
 def selectStreams(detecter,downloadConfig):
@@ -424,21 +470,23 @@ async def downloadAndSave(videoId,allconfig):
     downloadUrlData = await downloadVideo.get_download_url(0)
     #解析视频下载信息
     Detecter = video.VideoDownloadURLDataDetecter(data=downloadUrlData)
-    tempFlvPath = os.path.join(allconfig['global_config']['tempPath'],"flv_temp.flv")
-    tempVideoPath = os.path.join(allconfig['global_config']['tempPath'],"video_temp.m4s")
-    tempAudioPath = os.path.join(allconfig['global_config']['tempPath'],"audio_temp.m4s")
-    finalFileName = sanitizeFilename(downloadVideoName) + '.mp4'
-    finalFilePath = os.path.join(allconfig['global_config']['downloadPath'],finalFileName)
+    tempPath = allconfig['global_config']['tempPath'] #缓存目录
+    checkOrCreateDirectory(tempPath)
+    tempFlv = os.path.join(tempPath,"flv_temp.flv") #临时flv流(含路径)
+    tempVideo = os.path.join(tempPath,"video_temp.m4s") #临时视频流名(含路径)
+    tempAudio = os.path.join(tempPath,"audio_temp.m4s") #临时音频流名(含路径)
+    finalFileName = sanitizeFilename(downloadVideoName) + '.mp4' #下载文件名
+    downloadPath = allconfig['global_config']['downloadPath'] #下载目录
     videoUrl,audioUrl = selectStreams(Detecter,allconfig['download_config'])
     if Detecter.check_flv_stream():
         # 下载FLV
-        await downloadFromUrl(videoUrl, tempFlvPath, "FLV音视频流")
-        mixStreams(videoPath=tempVideoPath,audioPath='',finalPath=finalFileName)
+        await downloadFromUrl(videoUrl, tempFlv, "FLV音视频流")
+        mixStreams(videoPath=tempVideo,audioPath='',finalPath=downloadPath,name=finalFileName)
     else:
         #下载MP4流
-        await downloadFromUrl(videoUrl, tempVideoPath, "视频流")
-        await downloadFromUrl(audioUrl, tempAudioPath, "音频流")
-        mixStreams(videoPath=tempVideoPath,audioPath=tempAudioPath,finalPath=finalFilePath)
+        await downloadFromUrl(videoUrl, tempVideo, "视频流")
+        await downloadFromUrl(audioUrl, tempAudio, "音频流")
+        mixStreams(videoPath=tempVideo,audioPath=tempAudio,finalPath=downloadPath,name=finalFileName)
     print(f'{finalFileName}下载完成了！')
 async def main():
     allconfig = await loadAllConfig()

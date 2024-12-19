@@ -1,0 +1,18 @@
+# 修复过的bug
+## 20241219
+1. av号的av大写时函数extractAvidBvid()没能解析出av号(纯数字)。
+    - 成因:正则表达式匹配仅匹配到以"av"开头的av号。
+    - 修复方式:改进了正则表达式，使其能够匹配以"av","Av","aV","AV"开头的av号
+    - 附言:修复此bug时引发了Bugid=2的bug
+2. 改进解析bv号的正则表达式时让不合格的bv号也进入程序了
+    - 成因:bv号需要严格以"BV"开头，但是改进的正则表达式让以"bV","Bv","bv"的bv号也进入了程序
+    - 修复方式:增加了normalizeBvid()函数，extractAvidBvid()函数将会在返回之前调用其用来规范化bv号
+    - 附言:av号不需要是因为extractAvidBvid()函数解析出的av号仅含数字
+3. av号转化bv号出错
+    - 成因:bilibili_api.aid2bvid()函数输入数字形式的av号，返回字符串类型的BV号,而extractAvidBvid()解析出的av号为字符串类型，引起类型错误
+    - 修复方式:将av号强制转换为int,因为extractAvidBvid()能保证解析出的av号仅含数字
+    - 附言:要认真看api！！！
+4. 如果配置文件中设置了下载，缓存路径而实际不存在会报错
+    - 成因:保存文件时未检测实际目录是否存在
+    - 修复方式:编写了checkOrCreateDirectory()函数，在downloadAndSave()中的downloadFromUrl()之前以及混流前会调用
+    - 附言：真有人会这样做吗？另外重构了downloadAndSave()的代码，因为原来保存文件的路径会和文件名混在一起，现在分开成两个变量

@@ -42,8 +42,9 @@ pip install tqdm
 pip install ffmpeg-python
 ```
 2. 接下来安装ffmpeg,并设置环境变量
-[教程](https://www.cnblogs.com/wwwwariana/p/18191233)
+- [windows教程](https://www.cnblogs.com/wwwwariana/p/18191233)
 ~~介于篇幅有限且网上的教程比我写的更好，请自行点击链接学习~~
+- linux下: 使用包管理器安装
 
 3. 下载main.py(或者拷贝里面的内容并存到你新建的.py文件中)
 
