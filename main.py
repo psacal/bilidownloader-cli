@@ -75,7 +75,7 @@ def initDownloadConfig():
         defaultCodec:默认编码
         defaultByterate:默认音质
         defaultChoice:下载配置的指定方式:自动最佳,每次手动,固定
-        audioOnly:是否只下载音频流
+        audioOnly:是否只下载音频
     '''
     downloadConfig = {
         'noLogin': False,
@@ -497,6 +497,9 @@ async def downloadAndSave(videoId,allconfig):
     tempAudio = os.path.join(tempPath,"audio_temp.m4s") #临时音频流名(含路径)
     finalFileName = sanitizeFilename(downloadVideoName) + '.mp4' #下载文件名
     downloadPath = allconfig['global_config']['downloadPath'] #下载目录
+    if allconfig['download_config']['audioOnly'] == False and allconfig['download_config']['defaultChoice'] == 'MANUAL':
+        print("目前为手动选择模式，需要只下载音频吗？")
+        allconfig['download_config']['audioOnly'] = (True if input("请输入是否只下载音频 (y/n) 默认否 [n]: ").strip().lower() == 'y' else False)
     videoUrl,audioUrl = selectStreams(Detecter, allconfig['download_config'])
     if Detecter.check_flv_stream():
         # 下载FLV
@@ -517,6 +520,8 @@ async def downloadAndSave(videoId,allconfig):
     print(f'{downloadVideoName}下载完成了！')
 async def main():
     allconfig = await loadAllConfig()
+    if allconfig['download_config']['audioOnly']:
+        print('目前是仅下载音频模式')
     videoId = isInputVaild(input("请输入下载地址,AV号或BV号(bv号请不要只输入bv号后的部分)"))
     await downloadAndSave(videoId, allconfig)
 if __name__ == '__main__':
