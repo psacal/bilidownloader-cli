@@ -75,23 +75,30 @@ def initDownloadConfig():
         defaultCodec:默认编码
         defaultByterate:默认音质
         defaultChoice:下载配置的指定方式:自动最佳,每次手动,固定
+        audioOnly:是否只下载音频流
     '''
     downloadConfig = {
         'noLogin': False,
         'defaultResolution' : 'max',
         'defaultCodec' : 'h264',
         'defaultByterate' : '192k',
-        'defaultChoice' : 'MANUAL'
+        'defaultChoice' : 'MANUAL',
+        'audioOnly':'false'
     }
     downloadConfig['noLogin'] = (True if input("请输入是否免登录下载 (y/n) 默认否 [n]: ").strip().lower() == 'y' else False)
+    downloadConfig['audioOnly'] = (True if input("请输入是否只下载音频 (y/n) 默认否 [n]: ").strip().lower() == 'y' else False)
+    if downloadConfig['audioOnly']:
+        print('打开此选项的情况下，本下载器将只下载视频的音频流部分并保存为mp3格式')
     downloadConfig['defaultChoice'] = inputInList("请输入下载配置的指定方式(不分大小写),MAX:最佳,MANUAL:每次手动指定,FIXED:固定"
                                                   ,["MAX","MANUAL","FIXED"])
-    downloadConfig['defaultResolution'] = inputInList("请输入默认分辨率(不分大小写):8K,4K,HDR,1080P_60,1080P_plus,1080P,720P,480P,360P "
-                                                      ,["8K","4K","DOUBY","HDR","1080P_60","1080P_PLUS","1080P", "720P", "480P", "360P"])
-    downloadConfig['defaultCodec'] = inputInList("请输入默认编码(不分大小写):H264,H265,AV1 "
-                                                 ,["H264","H265","AV1"])
-    downloadConfig['defaultByterate'] = inputInList("请输入音质(不分大小写):Dolby,HIRES,192K,132K,64K "
-                                                    ,["Dolby","HIRES","192K","132K","64K"])
+    if downloadConfig['defaultChoice'] ==  "FIXED":
+        #如果选择流的配置为固定才会继续配置默认画质，编码，音质
+        downloadConfig['defaultResolution'] = inputInList("请输入默认画质(不分大小写):8K,4K,HDR,1080P_60,1080P_plus,1080P,720P,480P,360P "
+                                                        ,["8K","4K","DOUBY","HDR","1080P_60","1080P_PLUS","1080P", "720P", "480P", "360P"])
+        downloadConfig['defaultCodec'] = inputInList("请输入默认编码(不分大小写):H264,H265,AV1 "
+                                                    ,["H264","H265","AV1"])
+        downloadConfig['defaultByterate'] = inputInList("请输入音质(不分大小写):Dolby,HIRES,192K,132K,64K "
+                                                        ,["Dolby","HIRES","192K","132K","64K"])
     return downloadConfig
 async def generateAndInitConfigFile():
     '''
@@ -102,7 +109,8 @@ async def generateAndInitConfigFile():
             'noLogin': '',
             'defaultResolution': '',
             'defaultCodec' : '',
-            'defaultByterate' : ''
+            'defaultByterate' : '',
+            'audioOnly':''
         },
         'global_config' : {
             'downloadPath' : '',
@@ -370,7 +378,7 @@ async def downloadFromUrl(url: str, out: str, info: str):
                 pbar.update(len(chunk))
                 f.write(chunk)
             pbar.close()
-def mixStreams(videoPath,audioPath='',finalPath='default.mp4',name=''):
+def mixStreams(videoPath='',audioPath='',finalPath='default.mp4',name=''):
     '''
         混流
 
@@ -382,20 +390,27 @@ def mixStreams(videoPath,audioPath='',finalPath='default.mp4',name=''):
     '''
     checkOrCreateDirectory(finalPath)#检测下载路径是否存在
     finalFilePath = os.path.join(finalPath,name)#完整路径+下载文件名
-    if (audioPath != ''):
+    if (audioPath != '' and videoPath != ''):
         #视频，音频流都存在，即mp4
         audioStream = ffmpeg.input(audioPath)
         videoStream = ffmpeg.input(videoPath)
-        outputStream = ffmpeg.output(audioStream, videoStream, finalFilePath, acodec='copy', vcodec='copy',loglevel = 1)
+        outputStream = ffmpeg.output(audioStream, videoStream, finalFilePath, acodec='copy', vcodec='copy',loglevel='info')
         ffmpeg.run(outputStream)
         os.remove(videoPath)
         os.remove(audioPath)
-    else:
+    elif (audioPath == '' and videoPath != ''):
         #音频视频流，即flv
         inputStream = ffmpeg.input(videoPath)
-        outputStream = ffmpeg.output(inputStream,finalFilePath,vcodec='libx264')
+        outputStream = ffmpeg.output(inputStream, finalFilePath, vcodec='libx264', loglevel='info')
         ffmpeg.run(outputStream)
-        os.remove(finalPath)
+        os.remove(videoPath)
+    elif (audioPath != '' and videoPath == ''):
+        #音频流转mp3
+        inputStream = ffmpeg.input(audioPath)
+        finalMp3Path = finalFilePath.replace('.mp4','.mp3')
+        outputStream = ffmpeg.output(inputStream, finalMp3Path, loglevel='info')
+        ffmpeg.run(outputStream)
+        os.remove(audioPath)
 def selectStreams(detecter,downloadConfig):
     '''
         从解析出的视频/音频流中选择流
@@ -421,7 +436,7 @@ def selectStreams(detecter,downloadConfig):
                         print(i,'视频:',enhanceStreamDataReadability(streamsList[i].video_quality.name),'编码:',enhanceStreamDataReadability(streamsList[i].video_codecs.name))
                     elif type(streamsList[i]).__name__ == 'AudioStreamDownloadURL':
                         print(i,'音频:',enhanceStreamDataReadability(streamsList[i].audio_quality.name))
-            videoIndex,audioIndex = int(input("请输入视频清晰度序号")),int(input('请输入音频清晰度序号'))
+            videoIndex,audioIndex = int(input("请输入画质序号")),int(input('请输入音质序号'))
             videoUrl = streamsList[videoIndex].url
             audioUrl = streamsList[audioIndex].url
     elif choice == 'FIXED':
@@ -460,7 +475,7 @@ def initCredential(cookies):
             print("刷新cookies!")
             sync(credential.refresh())
     except exceptions.CredentialNoSessdataException:
-            print("没有用户信息，无需刷新Cookies")
+            print("没有用户信息,无需刷新Cookies")
     return credential
 async def downloadAndSave(videoId,allconfig):
     '''
@@ -482,21 +497,28 @@ async def downloadAndSave(videoId,allconfig):
     tempAudio = os.path.join(tempPath,"audio_temp.m4s") #临时音频流名(含路径)
     finalFileName = sanitizeFilename(downloadVideoName) + '.mp4' #下载文件名
     downloadPath = allconfig['global_config']['downloadPath'] #下载目录
-    videoUrl,audioUrl = selectStreams(Detecter,allconfig['download_config'])
+    videoUrl,audioUrl = selectStreams(Detecter, allconfig['download_config'])
     if Detecter.check_flv_stream():
         # 下载FLV
+        print('此视频只有flv流')
         await downloadFromUrl(videoUrl, tempFlv, "FLV音视频流")
-        mixStreams(videoPath=tempVideo,audioPath='',finalPath=downloadPath,name=finalFileName)
+        mixStreams(videoPath=tempVideo, finalPath=downloadPath, name=finalFileName)
     else:
         #下载MP4流
-        await downloadFromUrl(videoUrl, tempVideo, "视频流")
-        await downloadFromUrl(audioUrl, tempAudio, "音频流")
-        mixStreams(videoPath=tempVideo,audioPath=tempAudio,finalPath=downloadPath,name=finalFileName)
-    print(f'{finalFileName}下载完成了！')
+        if allconfig['download_config']['audioOnly']:
+            #如果设置了只下载音频流，则不用下载视频流
+            await downloadFromUrl(audioUrl, tempAudio,'音频流')
+            mixStreams(audioPath=tempAudio, finalPath=downloadPath, name=finalFileName)
+        else:
+            #下载视频流与音频流
+            await downloadFromUrl(videoUrl, tempVideo, "视频流")
+            await downloadFromUrl(audioUrl, tempAudio, "音频流")
+            mixStreams(videoPath=tempVideo, audioPath=tempAudio, finalPath=downloadPath, name=finalFileName)
+    print(f'{downloadVideoName}下载完成了！')
 async def main():
     allconfig = await loadAllConfig()
-    videoId = isInputVaild(input("请输入下载地址，AV号或BV号,bv号请不要只输入bv号后的部分"))
-    await downloadAndSave(videoId,allconfig)
+    videoId = isInputVaild(input("请输入下载地址,AV号或BV号(bv号请不要只输入bv号后的部分)"))
+    await downloadAndSave(videoId, allconfig)
 if __name__ == '__main__':
     # 主入口
     asyncio.get_event_loop().run_until_complete(main())

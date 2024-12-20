@@ -11,7 +11,7 @@
     - 附言:av号不需要是因为extractAvidBvid()函数解析出的av号仅含数字
     - 反馈者 [psacal](https://github.com/psacal)
 3. av号转化bv号出错
-    - 成因:bilibili_api.aid2bvid()函数输入数字形式的av号，返回字符串类型的BV号,而extractAvidBvid()解析出的av号为字符串类型，引起类型错误
+    - 成因:bilibili_api.aid2bvid()函数输入int类型的av号，返回字符串类型的BV号,而extractAvidBvid()解析出的av号为字符串类型，引起类型错误
     - 修复方式:将av号强制转换为int,因为extractAvidBvid()能保证解析出的av号仅含数字
     - 附言:要认真看api！！！
     - 反馈者：[No.22](https://github.com/No-22-Github)
@@ -23,5 +23,5 @@
 5. 改进解析av号与bv号函数
     - 成因:未能考虑到只输入纯数字作为av号的用户
     - 修复方式:在extractAvidBvid()加入正则表达式判断
-    - 附言:顺便修复了在bvid=None的情况下仍然调用normalizeBvid()而导致错误的bug,这个小bug属于Bugid=2的bug的遗留。另外由于不能确定bv号去掉前导的两个字母后是否又正好以av,Av,aV,AV开头，故在输入时做了提示
+    - 附言:顺便修复了在bvid=None的情况下仍然调用normalizeBvid()而导致错误的bug,这个小bug属于Bugid=2的bug的遗留。另外由于不能确定bv号去掉前导的两个字母后是否又正好以av,Av,aV,AV开头，故在输入时做了提示(请勿将bv号的前缀'bv'去掉)
     - 反馈者：[No.22](https://github.com/No-22-Github)

@@ -31,6 +31,9 @@
 - [pyyaml](https://github.com/yaml/pyyaml):解析Yaml
 - [tqdm](https://github.com/tqdm/tqdm):Python下实现命令行进度条
 - [httpx](https://github.com/encode/httpx):A next generation HTTP client for Python
+
+## bug&feature日志
+
 ## 上手使用
 ### 简要步骤
 1. 确保你的电脑已经安装好Python环境，然后使用Pip命令安装以下依赖：
@@ -53,12 +56,17 @@ pip install ffmpeg-python
 python main.py
 ```
 根据提示初始化配置
+
 **如果对配置不满意，直接把config.yaml删掉即可**
 
 ## 注意事项
 本下载器无法下载番剧,课程
 
 ## 成为贡献者
+- 本程序采用小驼峰命名法
+- 一个函数尽量只做一件事,如果完成了两件事要在命名中体现出来
+  - 正确示范:checkOrCreateDirectory(),说明了会检查路径或者创建一个(隐含的前提是检查的路径不存在)
+- 为你的函数编写注释,说明参数和返回值以及这个函数的用途
 
 ## 最后
 
