@@ -32,7 +32,10 @@
 - [tqdm](https://github.com/tqdm/tqdm):Python下实现命令行进度条
 - [httpx](https://github.com/encode/httpx):A next generation HTTP client for Python
 
-## bug&feature日志
+## buglist&更新日志
+- [buglist](https://github.com/psacal/bilidownloader-cli/blob/main/buglist.md)
+- [更新日志](https://github.com/psacal/bilidownloader-cli/blob/main/changelist.md)
+
 
 ## 上手使用
 ### 简要步骤
