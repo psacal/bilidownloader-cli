@@ -31,6 +31,7 @@ def checkOrCreateDirectory(path):
     if not os.path.exists(path):
         try:
             # 路径成功创建
+            print("成功创建目录",path)
             os.makedirs(path)
         except OSError as e:
             # 如果创建目录时发生错误（例如权限不足）
@@ -79,7 +80,7 @@ def initDownloadConfig():
     '''
     downloadConfig = {
         'noLogin': False,
-        'defaultResolution' : 'max',
+        'defaultResolution' : '360p',
         'defaultCodec' : 'h264',
         'defaultByterate' : '192k',
         'defaultChoice' : 'MANUAL',
