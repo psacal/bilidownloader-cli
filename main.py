@@ -185,10 +185,17 @@ async def userLogin():
                 credential = tempCredential
                 print("通过账号密码登录成功")
         elif (choose == 2):
-            countryNumber = input('输入电话国家代码，默认为中国大陆+86')
-            countryNumber = countryNumber if (countryNumber != '') else "+86"
-            phoneNumber = input("请输入手机号:")
-            send_sms(PhoneNumber(phoneNumber, country=countryNumber)) # 默认设置地区为中国大陆
+            while True:
+                try :
+                    countryNumber = input('输入电话国家代码，默认为中国大陆+86')
+                    countryNumber = countryNumber if (countryNumber != '') else "+86"
+                    phoneNumber = input("请输入手机号:")
+                    send_sms(PhoneNumber(phoneNumber, country=countryNumber)) # 默认设置地区为中国大陆
+                    break
+                except ValueError as e:
+                    # 打印异常信息，并提示用户重新输入
+                    print(e)
+                    print("请输入有效的地区代码并重试。")
             code = input("请输入验证码：")
             tempCredential = login_with_sms(PhoneNumber(phoneNumber, country="+86"), code)
             if isinstance(tempCredential, Check):
@@ -461,7 +468,7 @@ def selectStreams(detecter,downloadConfig):
             videoUrl = streamsList[0].url
             audioUrl = streamsList[1].url
     return videoUrl,audioUrl 
-def initCredential(cookies):
+def initAndCheckCredential(cookies):
     '''
         从cookies中实例化credential并检测是否要刷新
     '''
@@ -482,7 +489,7 @@ async def downloadAndSave(videoId,allconfig):
     '''
         下载并保存文件
     '''
-    credential = initCredential(allconfig['cookies'])
+    credential = initAndCheckCredential(allconfig['cookies'])
     #根据BV号与用户信息实例化下载视频类downloadVideo
     downloadVideo = video.Video(bvid=videoId, credential=credential)
     #解析视频基本信息

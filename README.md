@@ -24,7 +24,7 @@
 ## TODO
 - [ ]  添加字幕，弹幕，视频简介及信息下载并与视频文件保存在同一文件夹
 - [ ]  测试在linux系统下的运行情况
-- [ ]  重构出可读取命令行参数版
+- [ ]  重构出可读取[命令行参数版](https://github.com/psacal/bilidownloader-cmd)
 
 ## 本程序使用了以下开源库：
 - [bilibili-api](https://github.com/Nemo2011/bilibili-api):用 Python 写的调用 Bilibili 各种 API 的库
