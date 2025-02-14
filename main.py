@@ -2,7 +2,7 @@ import asyncio
 from bilibili_api import video, Credential, HEADERS, login, sync, exceptions, user, settings
 import bilibili_api
 from bilibili_api.login import login_with_password, login_with_sms, send_sms, PhoneNumber, Check
-import httpx
+import requests
 import yaml
 import re
 import ffmpeg
@@ -375,17 +375,15 @@ async def downloadFromUrl(url: str, out: str, info: str):
     '''
         从指定url中下载
     '''
-    async with httpx.AsyncClient(headers=HEADERS) as sess:
-        resp = await sess.get(url)
-        length = resp.headers.get('content-length')
-        with open(out, 'wb') as f:
-            pbar = tqdm(total=int(length),desc=info+'进度')
-            for chunk in resp.iter_bytes(1024):
-                if not chunk:
-                    break
-                pbar.update(len(chunk))
-                f.write(chunk)
-            pbar.close()
+    response = requests.get(url, stream=True,headers=HEADERS)
+    total_size = int(response.headers.get("content-length", 0))
+    block_size = 1024
+    progress_bar = tqdm(total=total_size, unit="iB", unit_scale=True)
+    with open(out, "wb") as f:
+        for data in response.iter_content(block_size):
+            progress_bar.update(len(data))
+            f.write(data)
+    progress_bar.close()
 def mixStreams(videoPath='',audioPath='',finalPath='default.mp4',name=''):
     '''
         混流
